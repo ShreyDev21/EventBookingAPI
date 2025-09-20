@@ -1,0 +1,17 @@
+# Visual Studio temporary files
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider IDE
+.idea/
+
+# Logs
+*.log
+
+# Others
+*.DS_Store
