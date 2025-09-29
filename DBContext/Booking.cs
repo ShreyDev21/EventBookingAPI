@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace EventBookingAPI.Models;
+namespace EventBookingAPI.DBContext;
 
 public partial class Booking
 {

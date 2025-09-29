@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace EventBookingAPI.Models;
+namespace EventBookingAPI.DBContext;
 
 public partial class Event
 {
@@ -21,5 +21,9 @@ public partial class Event
 
     public string? ImageUrl { get; set; }
 
+    public int OrganizerId { get; set; }
+
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+
+    public virtual User Organizer { get; set; } = null!;
 }

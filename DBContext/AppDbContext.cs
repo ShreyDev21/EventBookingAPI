@@ -1,16 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using EventBookingAPI.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace EventBookingAPI.Data;
+namespace EventBookingAPI.DBContext;
 
 public partial class AppDbContext : DbContext
 {
-    public AppDbContext()
-    {
-    }
-
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
     {
@@ -20,9 +15,11 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Event> Events { get; set; }
 
-    public virtual DbSet<User> Users { get; set; }
+    public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder){}
+    public virtual DbSet<Role> Roles { get; set; }
+
+    public virtual DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -71,12 +68,58 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.ImageUrl)
                 .HasMaxLength(500)
                 .HasColumnName("image_url");
+            entity.Property(e => e.OrganizerId).HasColumnName("organizer_id");
             entity.Property(e => e.StartTime)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("start_time");
             entity.Property(e => e.Title)
                 .HasMaxLength(200)
                 .HasColumnName("title");
+
+            entity.HasOne(d => d.Organizer).WithMany(p => p.Events)
+                .HasForeignKey(d => d.OrganizerId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("events_organizer_id_fkey");
+        });
+
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("refresh_tokens_pkey");
+
+            entity.ToTable("refresh_tokens");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("now()")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("created_at");
+            entity.Property(e => e.ExpiresAt)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("expires_at");
+            entity.Property(e => e.Token).HasColumnName("token");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+
+            entity.HasOne(d => d.User).WithMany(p => p.RefreshTokens)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("refresh_tokens_user_id_fkey");
+        });
+
+        modelBuilder.Entity<Role>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("roles_pkey");
+
+            entity.ToTable("roles");
+
+            entity.HasIndex(e => e.Name, "roles_name_key").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Description)
+                .HasMaxLength(200)
+                .HasColumnName("description");
+            entity.Property(e => e.Name)
+                .HasMaxLength(50)
+                .HasColumnName("name");
         });
 
         modelBuilder.Entity<User>(entity =>
@@ -97,19 +140,19 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Otp)
                 .HasMaxLength(10)
                 .HasColumnName("otp");
-            entity.Property(e => e.OtpExpiry)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("otp_expiry");
+            entity.Property(e => e.OtpExpiry).HasColumnName("otp_expiry");
             entity.Property(e => e.PasswordHash)
                 .HasMaxLength(200)
                 .HasColumnName("password_hash");
-            entity.Property(e => e.Role)
-                .HasMaxLength(50)
-                .HasDefaultValueSql("'User'::character varying")
-                .HasColumnName("role");
+            entity.Property(e => e.RoleId).HasColumnName("role_id");
             entity.Property(e => e.Username)
                 .HasMaxLength(100)
                 .HasColumnName("username");
+
+            entity.HasOne(d => d.Role).WithMany(p => p.Users)
+                .HasForeignKey(d => d.RoleId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("users_role_id_fkey");
         });
 
         OnModelCreatingPartial(modelBuilder);
