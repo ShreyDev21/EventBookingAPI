@@ -102,6 +102,7 @@ namespace EventBookingAPI.Controllers
             return Ok(ApiResponse<string>.Ok("Email verified successfully"));
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<ActionResult<LoginResponseDto>> Login([FromBody] LoginDto dto)
         {

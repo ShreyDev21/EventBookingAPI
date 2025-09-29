@@ -16,7 +16,6 @@ namespace EventBookingAPI.Services
         private readonly IRefreshTokenRepository _refreshTokenRepository;
 
         public JwtAuthenticationService(IConfiguration configuration, IUsersRepository usersRepository, IRefreshTokenRepository refreshTokenRepository) { 
-        //public JwtAuthenticationService(IConfiguration configuration, IUsersRepository usersRepository) { 
             _configuration = configuration;
             _usersRepository = usersRepository;
             _refreshTokenRepository = refreshTokenRepository;
@@ -49,10 +48,10 @@ namespace EventBookingAPI.Services
             // Correct claim array syntax
             var claims = new Claim[]
             {
-                new Claim(JwtRegisteredClaimNames.Name, usr.Username),
-                new Claim(JwtRegisteredClaimNames.Email, usr.Email),
+                new Claim(ClaimTypes.Name, usr.Username),
+                new Claim(ClaimTypes.Email, usr.Email),
                 new Claim(ClaimTypes.Role, usr.RoleId.ToString()),
-                new Claim(JwtRegisteredClaimNames.Sub, usr.Id.ToString())
+                new Claim(ClaimTypes.SerialNumber, usr.Id.ToString())
             };
 
             var token = new JwtSecurityToken(
@@ -71,11 +70,11 @@ namespace EventBookingAPI.Services
                 AccessToken = accessToken,
                 Email = usr.Email,
                 ExpiresIn = Math.Max(expiresInSeconds, 0),
-                RefreshToken =  GenerateRefreshToken(usr.Id) // ensure never negative
+                RefreshToken = await GenerateRefreshToken(usr.Id) // ensure never negative
             };
         }
 
-        public string GenerateRefreshToken(int userId)
+        public async Task<string> GenerateRefreshToken(int userId)
         {
             var refreshTokenValidityMins = _configuration.GetValue<int>("JwtConfig:RefreshTokenValidityMinutes");
 
@@ -87,7 +86,7 @@ namespace EventBookingAPI.Services
                 CreatedAt = DateTime.UtcNow,
             };
 
-             _refreshTokenRepository.Create(refreshToken);
+             await _refreshTokenRepository.Create(refreshToken);
 
             return refreshToken.Token;
 
